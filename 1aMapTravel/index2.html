@@ -1,0 +1,182 @@
+<!doctype html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="initial-scale=1.0, user-scalable=no, width=device-width">
+  <link rel="stylesheet" href="https://a.amap.com/jsapi_demos/static/demo-center/css/demo-center.css" />
+  <title>地图显示</title>
+  <style>
+    html,
+    body,
+    #container {
+      width: 100%;
+      height: 100%;
+    }
+
+    .amap-marker-label {
+      background-color: transparent;
+      /* background-color: #007BFF; */
+      border: none;
+    }
+
+    /* .custom-label-high {
+      background-color: #1976D2;
+    }
+
+    .custom-label-middle {
+      background-color: #1976D2;
+    }
+
+    .custom-label-low {
+      background-color: #90CAF9;
+    } */
+    .custom-label-high {
+      /* background-color: #FF7043; */
+      background-color: #e75837;
+    }
+
+    .custom-label-middle {
+      background-color: #007BFF;
+    }
+
+    .custom-label-low {
+      background-color: #75d357;
+    }
+
+    .custom-label-bg {
+      background-color: #ff8063;
+    }
+
+    .custom-label {
+      /* background-color: #007BFF; */
+      color: #fff;
+      padding: 5px 10px;
+      border-radius: 5px;
+      font-size: 14px;
+      text-align: center;
+    }
+
+  </style>
+</head>
+
+<body>
+  <div id="container"></div>
+  <!-- 加载地图JSAPI脚本 -->
+  <script type="text/javascript"
+    src="https://webapi.amap.com/maps?v=1.4.15&key=e6d130d4aa8bf5c563ebe3c9a0b4fee6&plugin=AMap.DistrictSearch"></script>
+  <script type="module">
+    import data from "./data.js"
+    const AclassSpot = data.AclassSpot;
+
+    var map = new AMap.Map('container', {
+      resizeEnable: true, //是否监控地图容器尺寸变化
+      zoom: 11, //初始化地图层级
+    });
+
+    map.setCity("武汉市");
+    map.setMapStyle("amap://styles/macaron");
+
+    var currentIndex = 0; // 用于跟踪当前标记的索引
+
+    // 创建一个函数，用于逐个添加标记
+    function addMarkerOneByOne (markerData) {
+      if (currentIndex < markerData.length) {
+        var data = markerData[currentIndex];
+        let content, icon;
+        if (data.level == "AAAAA") {
+          content = `<div class="custom-label custom-label-high">${data.name}</div>`;
+          icon = "./image/c11.png";
+        }
+        else if (data.level == "AAAA") {
+          content = `<div class="custom-label custom-label-middle">${data.name}</div>`;
+          icon = "./image/c21.png";
+        } else if (data.level == "B") {
+          content = `<div class="custom-label custom-label-bg">${data.name}</div>`;
+          icon = "./image/c111.png";
+        } else {
+          content = `<div class="custom-label custom-label-low">${data.name}</div>`;
+          icon = "./image/c31.png";
+        }
+
+        var marker = new AMap.Marker({
+          position: [Number(data.longitude), Number(data.latitude)],
+          map: map,
+          icon,
+          zIndex: data.level == "AAAAA" ? 200 : 100
+        });
+
+        // 设置标签
+        marker.setLabel({
+          offset: new AMap.Pixel(0, -10),  // 设置标签的偏移量，以便将文字标识显示在点的上方
+          content,
+          direction: 'bottom'
+        });
+
+
+        marker.setAnimation('AMAP_ANIMATION_DROP', { duration: 600 })
+        currentIndex++; // 增加索引以处理下一个标记
+      } else {
+        clearInterval(timer); // 当所有标记都添加完毕后，清除定时器
+      }
+    }
+
+    // 设置定时器，每秒钟执行一次添加标记的函数
+    var timer = setInterval(function () {
+      addMarkerOneByOne(AclassSpot);
+    }, 100);
+
+    var district = null;
+    var polygons = [];
+    // 绘制行政区域
+    function drawBounds () {
+      //加载行政区划插件
+      if (!district) {
+        //实例化DistrictSearch
+        var opts = {
+          subdistrict: 0,   //获取边界不需要返回下级行政区
+          extensions: 'all',  //返回行政区边界坐标组等具体信息
+          level: 'city'  //查询行政级别为 市
+        };
+        district = new AMap.DistrictSearch(opts);
+      }
+
+      console.log(district);
+      district.search("武汉", function (status, result) {
+        if (status === 'complete' && result.info === 'OK') {
+          // 成功获取数据，处理 result
+          console.log(result);
+          map.remove(polygons)//清除上次结果
+          console.log(result);
+          polygons = [];
+          var bounds = result.districtList[0].boundaries;
+          if (bounds) {
+            for (var i = 0, l = bounds.length; i < l; i++) {
+              //生成行政区划polygon
+              var polygon = new AMap.Polygon({
+                strokeWeight: 1,
+                path: bounds[i],
+                fillOpacity: 0.4,
+                fillColor: '#80d8ff',
+                strokeColor: '#0091ea'
+              });
+              polygons.push(polygon);
+            }
+          }
+          map.add(polygons)
+          map.setFitView(polygons);//视口自适应
+        } else {
+          // 请求失败，输出错误信息
+          console.log('行政区域搜索失败：', result.info);
+        }
+      });
+    }
+    AMap.event.addDomListener(window, 'load', function () {
+      drawBounds();
+    });
+
+  </script>
+</body>
+
+</html>

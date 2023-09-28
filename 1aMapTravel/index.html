@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="initial-scale=1.0, user-scalable=no, width=device-width"
+    />
+    <link
+      rel="stylesheet"
+      href="https://a.amap.com/jsapi_demos/static/demo-center/css/demo-center.css"
+    />
+    <title>地图显示</title>
+    <style>
+      html,
+    body,
+    #container {
+      width: 100%;
+      height: 100%;
+    }
+
+    .amap-marker-label {
+      background-color: transparent;
+      /* background-color: #007BFF; */
+      border: none;
+    }
+
+    /* .custom-label-high {
+      background-color: #1976D2;
+    }
+
+    .custom-label-middle {
+      background-color: #1976D2;
+    }
+
+    .custom-label-low {
+      background-color: #90CAF9;
+    } */
+    .custom-label-high {
+      /* background-color: #FF7043; */
+      background-color: #e75837;
+    }
+
+    .custom-label-middle {
+      background-color: #75d357;
+      /* background-color: #007BFF; */
+    }
+
+    .custom-label-low {
+      background-color: #75d357;
+    }
+
+    .custom-label-bg {
+      background-color: #ff8063;
+    }
+
+    .custom-label-train {
+      background-color: #000;
+    }
+    .custom-label-eat {
+      background-color: #007BFF;
+    }
+    .custom-label-wharf {
+      background-color: #d4237a;
+    }
+    
+
+    .custom-label {
+      /* background-color: #007BFF; */
+      color: #fff;
+      padding: 5px 10px;
+      border-radius: 5px;
+      font-size: 14px;
+      text-align: center;
+    }
+
+    </style>
+  </head>
+
+  <body>
+    <div id="container"></div>
+    <script type="text/javascript">
+      // 添加高德安全密钥
+      window._AMapSecurityConfig = {
+        securityJsCode: "f55a06b43ccba6b9d735dcc542dafb1c"
+      };
+    </script>
+    <!-- 加载地图JSAPI脚本 -->
+  <script type="text/javascript" src="https://webapi.amap.com/maps?v=1.4.15&key=66a46099db6c57a3939449ef1137d0bb&plugin=AMap.PlaceSearch,AMap.DistrictSearch,AMap.Driving"></script>
+    
+    <script type="module">
+      import data from './data.js'
+      const AclassSpot = data.AclassSpot
+
+      // var map = new AMap.Map('container', {
+      //   resizeEnable: true, //是否监控地图容器尺寸变化
+      //   zoom: 11 //初始化地图层级
+      // })
+
+      // map.setCity('武汉市')
+      // map.setMapStyle('amap://styles/macaron')
+
+      // 定义放大函数
+      function zoomIn() {
+        var currentZoom = map.getZoom() // 获取当前缩放级别
+        if (currentZoom < 16) {
+          map.setZoom(currentZoom + 1) // 增加缩放级别
+        }
+        // 如果已经放大到缩放级别 20，清除定时器
+        if (currentZoom >= 16) {
+          clearInterval(timer)
+        }
+      }
+      // 设置定时器，每秒钟执行一次放大函数
+      // var timer = setInterval(zoomIn, 1000);
+
+      const recordePathData = [
+
+      ]
+
+      // 这是模拟后台返回的数据，包括每个点的具体信息
+      const markerArray =[
+      // {longitude: 114.310346, latitude: 30.603619} ,
+      // {longitude: 114.307084, latitude: 30.62024},
+      // {longitude: 114.299359, latitude: 30.589212} ,
+      // {longitude: 114.293094, latitude: 30.585887},
+      // {longitude: 114.292364, latitude: 30.580456},
+      // {longitude: 114.290476, latitude: 30.580272},
+      // {longitude: 114.2976, latitude: 30.576161},
+      // {longitude: 114.298179, latitude: 30.575321},
+      // {longitude: 114.294674, latitude: 30.551318},
+      // {longitude: 114.300167, latitude: 30.550838}
+
+      // {"longitude":114.31026,"latitude":30.549158},{"longitude":114.365535,"latitude":30.563201},{"longitude":114.364505,"latitude":30.537996},{"longitude":114.405961,"latitude":30.549823}
+
+      {"longitude":114.290347,"latitude":30.580789},{"longitude":114.28479,"latitude":30.55605},{"longitude":114.284532,"latitude":30.555496},{"longitude":114.294617,"latitude":30.550802},{"longitude":114.308565,"latitude":30.552576},{"longitude":114.306247,"latitude":30.544926}
+      ]
+      // var markerArray = [
+      //   {
+      //     longitude: '114.363129',
+      //     latitude: '30.525454',
+      //     license: '陕KE1675',
+      //     speed: '57.2KM/H',
+      //     time: '2021-06-07 16:21:12'
+      //   },
+      //   {
+      //     longitude: '114.370934',
+      //     latitude: '30.543459',
+      //     license: '陕KE1675',
+      //     speed: '56.5KM/H',
+      //     time: '2021-06-07 16:25:21'
+      //   },
+      //   {
+      //     longitude: '114.290314',
+      //     latitude: '30.579392',
+      //     license: '陕KE1675',
+      //     speed: '48.3KM/H',
+      //     time: '2021-06-07 16:51:28'
+      //   },
+      //   {
+      //     longitude: '114.299353',
+      //     latitude: '30.587731',
+      //     license: '陕KE1675',
+      //     speed: '65.6KM/H',
+      //     time: '2021-06-07 17:21:30'
+      //   }
+      // ]
+
+      /*
+      构造函数介绍：
+
+      AMap.LngLat(lng:Number,lat:Number,noAutofix:bool): 构造一个地理坐标对象
+      lng、lat分别代表经度、纬度值;
+      noAutoFix表示是否自动将经度修正到 [-180,180] 区间内，缺省为false，此时会自动修正，比如传入[190,30]，会被自动修正为[-170,30],noAutoFix为true时不会自动修正
+
+      AMap.Pixel(x:Number,y:Number): 构造一个像素坐标对象
+      x方向坐标，y方向坐标
+      */
+
+      /**
+       * map: 地图容器
+       * marker: 移动的汽车
+       * lineArr: 轨迹节点的坐标数组
+       * polyline: 整条轨迹
+       * passedPolyline: 已经移动过的轨迹
+       * infoTip: 信息展示tips
+       */
+      var map, marker, lineArr, polyline, passedPolyline, infoTip
+      // 当前是否正在移动
+      var movingFlag = false
+      initMap(markerArray)
+      function initMap(markerArray) {
+        // 初始化轨迹线
+        lineArr = markerArray.map(item => [item.longitude, item.latitude])
+        map = new AMap.Map('container', {
+          // Boolean: 是否监控地图容器尺寸变化，默认值为false
+          resizeEnable: true,
+          // LngLat: 地图中心点坐标值，数组类型的格式也可以
+          center: [114.344163, 30.554997],
+          zoom: 13, //初始化地图层级
+        })
+        map.setMapStyle('amap://styles/macaron')
+        // 创建汽车
+        marker = new AMap.Marker({
+          // Map: 要显示该marker的地图对象
+          map: map,
+          // LngLat: 点标记在地图上显示的位置，默认为地图中心点，数组类型的格式也可以
+          // 或 position: new AMap.LngLat(116.478935, 39.997761),
+          position: lineArr[0],
+          // String/Icon: 需在点标记中显示的图标。可以是一个本地图标地址，或者Icon对象。有合法的content内容时，此属性无效
+          icon: 'https://webapi.amap.com/images/car.png',
+          /*
+        Pixel: 点标记显示位置偏移量，默认值为Pixel(-10,-34)
+        Marker指定position后，默认以marker左上角位置为基准点，对准所给定的position位置，若需使marker指定位置对准在position处，需根据marker的尺寸设置一定的偏移量
+        */
+          offset: new AMap.Pixel(-26, -13),
+          // Boolean: 是否自动旋转。点标记在使用moveAlong动画时，路径方向若有变化，点标记是否自动调整角度，默认为false。广泛用于自动调节车辆行驶方向
+          autoRotation: true,
+          // Number: 点标记的旋转角度，广泛用于改变车辆行驶方向
+          angle: -90
+        })
+
+        // 绘制整条轨迹
+        polyline = new AMap.Polyline({
+          // Map: 要显示该polyline的地图对象
+          map: map,
+          // Array: 折线的节点坐标数组
+          path: lineArr,
+          // Boolean: 是否延路径显示白色方向箭头,默认false。Canvas绘制时有效，建议折线宽度大于6时使用
+          showDir: true,
+          // String: 线条颜色，使用16进制颜色代码赋值。默认值为#006600
+          strokeColor: '#28F',
+          // Number: 线条透明度，取值范围[0,1]，0表示完全透明，1表示不透明。默认为0.9
+          strokeOpacity: 1,
+          // Number: 线条宽度，单位：像素
+          strokeWeight: 6,
+          // String: 线样式，实线:solid，虚线:dashed
+          strokeStyle: 'solid'
+        })
+
+        // 创建信息展示tip
+        infoTip = new AMap.InfoWindow({
+          isCustom: true, // 使用自定义窗体
+          content: document.getElementById('tips'),
+          offset: new AMap.Pixel(16, -45)
+        })
+
+        // 已经移动过的轨迹
+        passedPolyline = new AMap.Polyline({
+          map: map,
+          strokeColor: '#AF5',
+          strokeWeight: 6,
+          strokeStyle: 'dashed'
+        })
+      }
+
+      function start() {
+        if (!movingFlag) {
+          /*
+        moveAlong(path:Array, speed:Number, f:Function, circlable:Boolean)
+        以指定的速度，点标记沿指定的路径移动。
+            path: 为轨迹路径的经纬度对象的数组；
+            speed：为指定速度，单位：千米/小时，不可为0
+            f: 为变化曲线函数，缺省为function(k){return k}
+            circlable: 表明是否循环执行动画，默认为false
+        */
+          marker.moveAlong(lineArr, 1200)
+          movingFlag = true
+        } else {
+          // 恢复点标记的动画效果
+          marker.resumeMove()
+        }
+      }
+      
+      function pause() {
+        if (movingFlag) {
+          // 暂定点标记的动画效果
+          marker.pauseMove()
+        }
+      }
+      function reset() {
+        if (movingFlag) {
+          // 关闭弹窗
+          infoTip.close()
+          // 回到初始位置
+          marker.setPosition([116.478935, 39.997761])
+          marker.stopMove()
+          // 清除已经移动的轨迹
+          passedPolyline.setPath([])
+          movingFlag = false
+        }
+      }
+      /*
+      监听移动事件：
+      点标记在执行moveTo，moveAlong动画时触发事件, e的格式是{passedPath:Array<LngLat>}
+      其中passedPath为Marker对象在moveAlong或者moveTo过程中已经走过的路径
+      */
+      marker.on('moving', function (e) {
+        // setPath: 设置组成该折线的节点数组
+        passedPolyline.setPath(e.passedPath)
+        var length = e.passedPath.length
+        // console.log(length, e.passedPath); 可以打印看看结构
+        // 在移动时更新信息
+        // document.getElementById('tips').style.display = 'flex';
+        // document.getElementById('license').innerText = '车牌号：' + markerArray[length - 1].license;
+        // document.getElementById('speed').innerText = '车速：' + markerArray[length - 1].speed;
+        // document.getElementById('longitude').innerText = '经度：' + markerArray[length - 1].longitude;
+        // document.getElementById('latitude').innerText = '纬度：' + markerArray[length - 1].latitude;
+        // document.getElementById('time').innerText = '时间：' + markerArray[length - 1].time;
+        // infoTip.open(map, marker.getPosition());
+      })
+
+      /*
+      setFitView(overlayList:Array/null, immediately:bool, avoid:[Number,Number,Number,Number], maxZoom:Number)
+      根据地图上添加的覆盖物分布情况，自动缩放地图到合适的视野级别，参数均可缺省
+          overlayList: 为覆盖物数组，缺省时为当前地图上添加的所有覆盖物图层
+          immediately: 代表是否需要动画过程
+          avoid: 代表上下左右的像素避让宽度
+          maxZoom: 代表fitView之后的最大级别
+      */
+      // map.setFitView()
+      /*------绘制行政区划---------*/
+    var district = null;
+    var polygons = [];
+    // 绘制行政区域
+    function drawBounds (districtName,fillColor,strokeColor) {
+      //加载行政区划插件
+      if (!district) {
+        //实例化DistrictSearch
+        var opts = {
+          subdistrict: 0,   //获取边界不需要返回下级行政区
+          extensions: 'all',  //返回行政区边界坐标组等具体信息
+          level: 'district'  //查询行政级别为 市
+        };
+        district = new AMap.DistrictSearch(opts);
+      }
+
+      district.search(districtName, function (status, result) {
+        if (status === 'complete' && result.info === 'OK') {
+          // 成功获取数据，处理 result
+          // map.remove(polygons)//清除上次结果
+          polygons = [];
+          var bounds = result.districtList[0].boundaries;
+          if (bounds) {
+            for (var i = 0, l = bounds.length; i < l; i++) {
+              //生成行政区划polygon
+              var polygon = new AMap.Polygon({
+                strokeWeight: 1,
+                path: bounds[i],
+                fillOpacity: 0.6,
+                fillColor,
+                strokeColor
+              });
+              polygons.push(polygon);
+            }
+          }
+          map.add(polygons)
+          // map.setFitView(polygons);//视口自适应
+        } else {
+          // 请求失败，输出错误信息
+          console.log('行政区域搜索失败：', result.info);
+        }
+      });
+    }
+    AMap.event.addDomListener(window, 'load', function () {
+      drawBounds("武昌区",'#9C27B0','#7B1FA2');
+      drawBounds("江汉区",'#80d8ff','#0091ea');
+      drawBounds("江岸区",'#FFC107','#FFA000');
+    });
+// 在地图上批量打点
+function addMarkers(points) {
+        var markers = []
+
+        for (var i = 0; i < points.length; i++) {
+          var data = points[i]
+          let content, icon
+          if (data.level == "AAAAA") {
+          content = `<div class="custom-label custom-label-high">${data.name}</div>`;
+          icon = "./image/c11.png";
+        }
+        else if (data.level == "AAAA") {
+          content = `<div class="custom-label custom-label-middle">${data.name}</div>`;
+          icon = "./image/c31.png";
+        } else if (data.level == "B") {
+          content = `<div class="custom-label custom-label-bg">${data.name}</div>`;
+          icon = "./image/c111.png";
+        } else if (data.level == "eat") {
+          content = `<div class="custom-label custom-label-eat">${data.name}</div>`;
+          icon = "./image/c21.png";
+        } else if (data.level == "train") {
+          content = `<div class="custom-label custom-label-train">${data.name}</div>`;
+          icon = "./image/huochezhan.png";
+        }else if (data.level == "airplane") {
+          content = `<div class="custom-label custom-label-eat">${data.name}</div>`;
+          icon = "./image/feiji.png";
+        }else if (data.level == "wharf") {
+          content = `<div class="custom-label custom-label-wharf">${data.name}</div>`;
+          icon = "./image/shangchuan.png";
+        }else {
+          content = `<div class="custom-label custom-label-low">${data.name}</div>`;
+          icon = "./image/c31.png";
+        }
+
+          // 创建点实例
+          var marker = new AMap.Marker({
+            position: new AMap.LngLat(
+              parseFloat(data.longitude),
+              parseFloat(data.latitude)
+            ),
+            icon,
+            // icon: 'https://webapi.amap.com/theme/v1.3/markers/n/mark_b' + (i + 1) + '.png',
+            zIndex: data.level == "AAAAA" ? 200 : data.level == "eat" ? 150 : 100
+          })
+          marker.on('click', function (e) {
+          markerArray.push({
+            longitude:e.lnglat.getLng(),
+            latitude:e.lnglat.getLat()
+          }); // 将经纬度添加到数组
+          console.log(JSON.stringify(markerArray));
+        });
+          marker.setLabel({
+            offset: new AMap.Pixel(0, 0), //设置文本标注偏移量
+            content, //设置文本标注内容
+            direction: 'bottom' //设置文本标注方位
+          })
+          markers.push(marker)
+        }
+        // 创建覆盖物群组，并将 marker 传给 OverlayGroup
+        var overlayGroups = new AMap.OverlayGroup(markers)
+        map.add(overlayGroups)
+      }
+
+      // A级景区 打点
+      addMarkers(AclassSpot)
+      start()
+    </script>
+  </body>
+</html>
